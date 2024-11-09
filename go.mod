@@ -4,6 +4,8 @@ go 1.23.0
 
 require (
 	github.com/matryer/is v1.4.1
+	github.com/matthewmueller/signals v0.0.1
+	github.com/matthewmueller/testchild v0.0.1
 	github.com/pointlander/peg v1.0.1
 	golang.org/x/sync v0.8.0
 )

@@ -2,14 +2,14 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/matthewmueller/socket.svg)](https://pkg.go.dev/github.com/matthewmueller/socket)
 
-Socket utilities for Go.
+Socket utilities for Go. This library is a superset of `http.ListenAndServe`.
 
 ## Features
 
 - Familiar API
-- Listening and dial unix domain sockets
+- Listen on and connect to Unix Domain Sockets
 - Graceful server shutdown with `context.Context`
-- [Systemd socket activation](https://0pointer.de/blog/projects/socket-activation.html)
+- Support for socket activation (see below)
 - No third-party dependencies
 
 ## Install
@@ -18,99 +18,53 @@ Socket utilities for Go.
 go get github.com/matthewmueller/socket
 ```
 
-## Example
+## Examples
+
+### Listen on a port
 
 ```go
-package main
-
-import (
-  "context"
-  "errors"
-  "fmt"
-  "io"
-  "net/http"
-  "os"
-  "path/filepath"
-  "time"
-
-  "github.com/matthewmueller/socket"
-  "golang.org/x/sync/errgroup"
-)
-
-func main() {
-  // Create a cancelable context
-  ctx, cancel := context.WithCancel(context.Background())
-  defer cancel()
-
-  // Create a handler
-  handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-    w.Write([]byte("hello world!"))
-  })
-
-  // Create the socket path
-  tmpdir, err := os.MkdirTemp("", "")
-  if err != nil {
-    fmt.Println(err)
-    return
-  }
-  socketPath := filepath.Join(tmpdir, "unix.sock")
-
-  // Listen on the unix domain socket
-  ln, err := socket.Listen(socketPath)
-  if err != nil {
-    fmt.Println(err)
-    return
-  }
-  defer ln.Close()
-
-  // Start the server
-  eg := new(errgroup.Group)
-  eg.Go(func() error {
-    return socket.Serve(ctx, ln, handler)
-  })
-
-  // Create the transport over the unix domain socket
-  transport, err := socket.Transport(socketPath)
-  if err != nil {
-    fmt.Println(err)
-    return
-  }
-
-  // Create the client
-  client := &http.Client{
-    Transport: transport,
-    Timeout:   time.Second,
-  }
-
-  // Make a request
-  res, err := client.Get("http://localhost")
-  if err != nil {
-    fmt.Println(err)
-    return
-  }
-
-  // Read the response
-  body, err := io.ReadAll(res.Body)
-  if err != nil {
-    fmt.Println(err)
-    return
-  }
-
-  // Cancel the context
-  cancel()
-
-  // Wait for the server to shutdown
-  if err := eg.Wait(); err != nil {
-    if !errors.Is(err, http.ErrServerClosed) {
-      fmt.Println(err)
-      return
-    }
-  }
-
-  // Output the response
-  fmt.Println(string(body))
-}
+socket.ListenAndServe(ctx, ":3000", handler)
 ```
+
+### Listen on a specific host and port
+
+```go
+socket.ListenAndServe(ctx, "0.0.0.0:3000", handler)
+```
+
+### Listen on a Unix Domain Socket
+
+```go
+socket.ListenAndServe(ctx, "/some/unix.socket", handler)
+```
+
+### Create a client that can talk through a Unix Domain Socket
+
+```go
+client := &http.Client{
+  Transport: socket.Transport("/some/unix.socket")
+}
+res, err := client.Get("http://localhost")
+```
+
+### Parse a Unix Domain Socket into a URL
+
+```go
+url, err := socket.Parse("./some/unix.socket")
+url.String() // unix://./some/unix.socket
+```
+
+### Listen on a file descriptor (Socket Activation)
+
+Tools like systemd support passing a socket to the processes that it manages. This allows systemd to manage the lifecycle of socket, not your server.
+
+This greatly improves restart time and allows connections to hang (rather than be refused) until the server is online again. There's a test in [socket_test.go](./socket_test.go) with an exampe of how to do this in pure Go without Systemd.
+
+```go
+socket.ListenAndServe(ctx, "fd:3", handler)
+```
+
+There are some other benefits like lazily starting processes (think Lambda function cold starts) that are covered in more detail in https://0pointer.de/blog/projects/socket-activation.html.
 
 ## Development
 

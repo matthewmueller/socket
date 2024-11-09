@@ -5,7 +5,7 @@ type parser Peg {
 }
 
 URL <- URI
-    / Path
+    / OnlyPath
     / Scheme
     / Host
     / OnlyPort
@@ -15,11 +15,18 @@ URI <- < Scheme '//' Host Path? > {
   p.url.uri = text
 }
 
-Scheme <- < [a-zA-Z][a-zA-Z+0-9]* ':' > {
+Scheme <- FdScheme / AnySchema
+
+FdScheme <- < 'fd:' [0-9]+ > {
+  p.url.scheme = "fd"
+  p.url.host = text[3:]
+}
+
+AnySchema <- < [a-zA-Z][a-zA-Z+0-9]* ':' > {
   p.url.scheme = text[:len(text)-1]
 }
 
-Host <- IPPort / HostNamePort / IPV4 / HostName / BracketsPort / Brackets
+Host <- IPPort / HostNamePort / IPV4 / HostName / BracketsPort / Brackets / Path
 
 IPPort <- IP ':' Port
 HostNamePort <- HostName ':' Port
@@ -37,8 +44,12 @@ HostName <- < [a-zA-Z][a-zA-Z0-9]* > {
 
 OnlyPort <- ':' Port / Port
 
-Port <- < [0-9]+ > {
+Port <- < '0' / [1-9] [0-9]* > {
   p.url.port = text
+}
+
+OnlyPath <- Path {
+  p.url.scheme = "unix"
 }
 
 Path <- RelPath / AbsPath

@@ -1,5 +1,9 @@
 github.com/matryer/is v1.4.1 h1:55ehd8zaGABKLXQUe2awZ99BD/PTc2ls+KV/dXphgEQ=
 github.com/matryer/is v1.4.1/go.mod h1:8I/i5uYgLzgsgEloJE1U6xx5HkBQpAZvepWuujKwMRU=
+github.com/matthewmueller/signals v0.0.1 h1:YkbAlN01+jbzhZLexi6ywkXFM7ro8o0HXQPxNWwIHZs=
+github.com/matthewmueller/signals v0.0.1/go.mod h1:ZWT8nUsBv5um/BxcfUiSpzrLao8kMgwOFXqOiKt18W8=
+github.com/matthewmueller/testchild v0.0.1 h1:llkDPWCc9I2pWwZ+tT3HWhWkv00RaF5+4Yn2/dLGT/Q=
+github.com/matthewmueller/testchild v0.0.1/go.mod h1:ZRwFgyiusaSAMlcuMFCU1NtZjs+o+QD7x/glsqXvB2Q=
 github.com/pointlander/compress v1.1.1-0.20190518213731-ff44bd196cc3 h1:hUmXhbljNFtrH5hzV9kiRoddZ5nfPTq3K0Sb2hYYiqE=
 github.com/pointlander/compress v1.1.1-0.20190518213731-ff44bd196cc3/go.mod h1:q5NXNGzqj5uPnVuhGkZfmgHqNUhf15VLi6L9kW0VEc0=
 github.com/pointlander/jetset v1.0.1-0.20190518214125-eee7eff80bd4 h1:RHHRCZeaNyBXdYPMjZNH8/XHDBH38TZzw8izrW7dmBE=

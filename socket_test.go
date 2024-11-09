@@ -7,13 +7,16 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/matryer/is"
+	"github.com/matthewmueller/signals"
 	"github.com/matthewmueller/socket"
+	"github.com/matthewmueller/testchild"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -177,4 +180,44 @@ func TestListenAndServe(t *testing.T) {
 	is.True(err != nil)
 	is.True(res == nil)
 	is.True(strings.Contains(err.Error(), `connection refused`)) // should have stopped
+}
+
+func TestListenAndServeFd(t *testing.T) {
+	parent := func(t testing.TB, cmd *exec.Cmd) {
+		is := is.New(t)
+		ln, err := socket.Listen(":0")
+		is.NoErr(err)
+		defer ln.Close()
+		file, err := ln.(*net.TCPListener).File()
+		is.NoErr(err)
+		cmd.ExtraFiles = append(cmd.ExtraFiles, file)
+		is.NoErr(cmd.Start())
+
+		// Test the connection
+		res, err := http.Get("http://" + ln.Addr().String())
+		is.NoErr(err)
+		is.Equal(res.StatusCode, 205)
+
+		// Send an interrupt signal
+		is.NoErr(cmd.Process.Signal(os.Interrupt))
+
+		// Wait for the process to exit gracefully
+		is.NoErr(cmd.Wait())
+
+	}
+
+	child := func(t testing.TB) {
+		is := is.New(t)
+		ctx := signals.Trap(context.Background(), os.Interrupt)
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(205)
+		})
+		if err := socket.ListenAndServe(ctx, "fd:3", handler); err != nil {
+			if !errors.Is(err, http.ErrServerClosed) {
+				is.NoErr(err)
+			}
+		}
+	}
+
+	testchild.Run(t, parent, child)
 }

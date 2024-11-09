@@ -8,25 +8,22 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
+	"syscall"
 )
 
 // Listen creates a new listener based on the addr
 func Listen(addr string) (net.Listener, error) {
-	// Try activating the socket first
-	lns, err := maybeActivate()
-	if err != nil {
-		return nil, err
-	} else if len(lns) > 0 {
-		return lns[0], nil
-	}
 	// Otherwise create a new listener based on the addr
 	url, err := Parse(addr)
 	if err != nil {
 		return nil, err
 	}
-	// Empty host means the addr is a unix domain socket
-	if url.Host == "" {
-		// Unix domain socket addr can't be more than 103 characters long
+
+	// Handle unix, tcp, and fd schemes
+	switch url.Scheme {
+	case "unix":
+		// Unix domain socket paths can't be more than 103 characters long
 		if len(addr) > 103 {
 			return nil, fmt.Errorf("socket: unix path too long %q", addr)
 		}
@@ -34,22 +31,38 @@ func Listen(addr string) (net.Listener, error) {
 		if err != nil {
 			return nil, err
 		}
-		unix, err := net.ListenUnix("unix", addr)
+		ln, err := net.ListenUnix("unix", addr)
 		if err != nil {
 			return nil, err
 		}
-		return unix, nil
+		return ln, nil
+
+	case "fd":
+		// File descriptors are passed in through systemd
+		fd, err := strconv.Atoi(url.Host)
+		if err != nil {
+			return nil, err
+		}
+		syscall.CloseOnExec(fd)
+		file := os.NewFile(uintptr(fd), url.Host)
+		ln, err := net.FileListener(file)
+		if err != nil {
+			return nil, err
+		}
+		return ln, nil
+
+		// Otherwise, bind to a TCP port
+	default:
+		addr, err := net.ResolveTCPAddr("tcp", url.Host)
+		if err != nil {
+			return nil, err
+		}
+		ln, err := net.ListenTCP("tcp", addr)
+		if err != nil {
+			return nil, err
+		}
+		return ln, nil
 	}
-	// Otherwise, we listen on a TCP port
-	tcpAddr, err := net.ResolveTCPAddr("tcp", url.Host)
-	if err != nil {
-		return nil, err
-	}
-	tcp, err := net.ListenTCP("tcp", tcpAddr)
-	if err != nil {
-		return nil, err
-	}
-	return tcp, nil
 }
 
 // Serve the handler at address. // When the context is canceled, the server

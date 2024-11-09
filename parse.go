@@ -51,10 +51,21 @@ func Parse(input string) (*url.URL, error) {
 	hasPort := parser.url.port != ""
 	hasPath := parser.url.path != ""
 
+	// Handle the path if there is one
+	u.Path = parser.url.path
+
 	// Handle the port
 	port := defaultPort
 	if !hasPort && u.Scheme == "https" {
 		port = "443"
+	}
+
+	if hasHost && u.Scheme == "fd" {
+		u.Host = parser.url.host
+	}
+
+	if u.Scheme == "unix" || u.Scheme == "fd" {
+		return u, nil
 	}
 
 	// Handle the host and port
@@ -68,8 +79,6 @@ func Parse(input string) (*url.URL, error) {
 		u.Host = defaultHost + ":" + port
 	}
 
-	// Handle the path if there is one
-	u.Path = parser.url.path
 	return u, nil
 }
 
