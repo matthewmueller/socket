@@ -56,9 +56,9 @@ url.String() // unix://./some/unix.socket
 
 ### Listen on a file descriptor (Socket Activation)
 
-Tools like systemd support passing a socket to the processes that it manages. This allows systemd to manage the lifecycle of socket, not your server.
+Tools like Systemd support passing a socket to the processes that it manages. This allows Systemd to manage the lifecycle of socket, not your server.
 
-This greatly improves restart time and allows connections to hang (rather than be refused) until the server is online again. There's a test in [socket_test.go](./socket_test.go) with an exampe of how to do this in pure Go without Systemd.
+This greatly improves restart time and allows connections to hang (rather than be refused) until the server is online again. There's a test in [socket_test.go](./socket_test.go) with an example of how to do this in pure Go without Systemd.
 
 ```go
 socket.ListenAndServe(ctx, "fd:3", handler)
