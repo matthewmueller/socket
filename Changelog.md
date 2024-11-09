@@ -1,3 +1,8 @@
+# 0.0.4 / 2024-11-09
+
+- Support file descriptors
+- **Breaking:** Replace implicit systemd support (envs) with explicit (fd:n)
+
 # 0.0.3 / 2024-11-09
 
 - tweaks to variable names, comments and filenames
