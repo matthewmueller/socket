@@ -1,3 +1,7 @@
+# 0.0.5 / 2024-12-26
+
+- disable file descriptor support on windows
+
 # 0.0.4 / 2024-11-09
 
 - Support file descriptors
