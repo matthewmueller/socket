@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
-	"syscall"
 )
 
 // Listen creates a new listener based on the addr
@@ -38,18 +36,7 @@ func Listen(addr string) (net.Listener, error) {
 		return ln, nil
 
 	case "fd":
-		// File descriptors are passed in through systemd
-		fd, err := strconv.Atoi(url.Host)
-		if err != nil {
-			return nil, err
-		}
-		syscall.CloseOnExec(fd)
-		file := os.NewFile(uintptr(fd), url.Host)
-		ln, err := net.FileListener(file)
-		if err != nil {
-			return nil, err
-		}
-		return ln, nil
+		return listenFd(url)
 
 		// Otherwise, bind to a TCP port
 	default:
