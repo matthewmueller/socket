@@ -1,3 +1,8 @@
+# 0.0.6 / 2024-12-28
+
+- support empty string getting assigned a random port
+- add socket.Format for printing the path to the socket
+
 # 0.0.5 / 2024-12-26
 
 - disable file descriptor support on windows
