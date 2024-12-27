@@ -221,3 +221,10 @@ func TestListenAndServeFd(t *testing.T) {
 
 	testchild.Run(t, parent, child)
 }
+
+func TestListenEmpty(t *testing.T) {
+	is := is.New(t)
+	ln0, err := socket.Listen("")
+	is.NoErr(err)
+	is.NoErr(ln0.Close())
+}

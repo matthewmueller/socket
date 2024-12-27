@@ -12,6 +12,11 @@ import (
 
 // Listen creates a new listener based on the addr
 func Listen(addr string) (net.Listener, error) {
+	// If the addr is empty, listen on a random port
+	if addr == "" {
+		addr = ":0"
+	}
+
 	// Otherwise create a new listener based on the addr
 	url, err := Parse(addr)
 	if err != nil {
