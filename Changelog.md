@@ -1,3 +1,7 @@
+# 0.0.7 / 2025-01-13
+
+- return `*http.Transport` from `socket.Transport(...)` for further customization
+
 # 0.0.6 / 2024-12-28
 
 - support empty string getting assigned a random port
