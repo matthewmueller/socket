@@ -25,7 +25,7 @@ func Dial(ctx context.Context, address string) (net.Conn, error) {
 }
 
 // Transport creates a RoundTripper for an HTTP Client
-func Transport(path string) (http.RoundTripper, error) {
+func Transport(path string) (*http.Transport, error) {
 	url, err := Parse(path)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func Transport(path string) (http.RoundTripper, error) {
 }
 
 // httpTransport is a modified from http.DefaultTransport
-func httpTransport(host string) http.RoundTripper {
+func httpTransport(host string) *http.Transport {
 	dialer := &net.Dialer{
 		Timeout:   30 * time.Second,
 		KeepAlive: 30 * time.Second,
