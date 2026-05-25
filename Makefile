@@ -1,4 +1,8 @@
-test:
+generate:
+	@ go generate ./...
+
+test: generate
+	@ go mod tidy
 	@ go vet ./...
 	@ go run honnef.co/go/tools/cmd/staticcheck@latest ./...
 	@ go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test ./...
@@ -8,7 +12,6 @@ precommit: test
 
 release: VERSION := $(shell awk '/[0-9]+\.[0-9]+\.[0-9]+/ {print $$2; exit}' Changelog.md)
 release: test
-	@ go mod tidy
 	@ test -n "$(VERSION)" || (echo "Unable to read the version." && false)
 	@ test -z "`git tag -l v$(VERSION)`" || (echo "Aborting because the v$(VERSION) tag already exists." && false)
 	@ test -z "`git status --porcelain | grep -vE '[MA]\s+Changelog\.md'`" || (echo "Aborting from uncommitted changes." && false)
