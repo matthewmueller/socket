@@ -1,3 +1,8 @@
+# 0.1.0 / 2026-05-26
+
+- add support for port ranges (e.g. 30xx)
+- use 'go tool peg' and add generate target
+
 # 0.0.7 / 2025-01-13
 
 - return `*http.Transport` from `socket.Transport(...)` for further customization
