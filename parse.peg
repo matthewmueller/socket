@@ -4,14 +4,14 @@ type parser Peg {
   url uri
 }
 
-URL <- URI
-    / OnlyPath
-    / Scheme
-    / Host
-    / OnlyPort
-    End
+URL <- URI End
+    / OnlyPath End
+    / FdScheme End
+    / Host End
+    / Scheme End
+    / OnlyPort End
 
-URI <- < Scheme '//' Host AbsPath? > {
+URI <- < Scheme '//' Host URLPath? Query? Fragment? > {
   p.url.Raw = text
 }
 
@@ -42,7 +42,7 @@ HostName <- < [a-zA-Z][a-zA-Z0-9]* > {
   p.url.Host = text
 }
 
-OnlyPort <- ':' Port AbsPath? / Port AbsPath?
+OnlyPort <- ':' Port URLPath? Query? Fragment? / Port URLPath? Query? Fragment?
 
 Port <- < PortRange / NumericPort > {
   p.url.Port = text
@@ -51,11 +51,23 @@ Port <- < PortRange / NumericPort > {
 PortRange <- [1-9] [0-9]* 'x'+
 NumericPort <- '0' / [1-9] [0-9]*
 
+Query <- '?' < (!'#' .)* > {
+  p.url.RawQuery = text
+}
+
+Fragment <- '#' < .* > {
+  p.url.Fragment = text
+}
+
 OnlyPath <- Path {
   p.url.Scheme = "unix"
 }
 
 Path <- RelPath / AbsPath
+
+URLPath <- < '/' (!('?' / '#') .)* > {
+  p.url.Path = text
+}
 
 RelPath <- < '.' '/' .* > {
   p.url.Path = text

@@ -111,6 +111,22 @@ func TestDial(t *testing.T) {
 	is.Equal(string(outgoing), msg+msg)
 }
 
+func TestDialRangeUnsupported(t *testing.T) {
+	is := is.New(t)
+	conn, err := socket.Dial(context.Background(), ":3xxx")
+	is.True(err != nil)
+	is.True(strings.Contains(err.Error(), `socket: "127.0.0.1:3xxx" port range is not supported by Dial`))
+	is.Equal(conn, nil)
+}
+
+func TestTransportRangeUnsupported(t *testing.T) {
+	is := is.New(t)
+	transport, err := socket.Transport(":3xxx")
+	is.True(err != nil)
+	is.True(strings.Contains(err.Error(), `socket: "127.0.0.1:3xxx" port range is not supported by Transport`))
+	is.Equal(transport, nil)
+}
+
 func TestUDSCleanup(t *testing.T) {
 	is := is.New(t)
 	listener, err := socket.Listen("./test.sock")

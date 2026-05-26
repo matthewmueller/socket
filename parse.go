@@ -54,6 +54,8 @@ func Parse(input string) (*url.URL, error) {
 
 	// Handle the path if there is one
 	u.Path = parser.url.Path
+	u.RawQuery = parser.url.RawQuery
+	u.Fragment = parser.url.Fragment
 
 	// Handle the port
 	port := defaultPort
@@ -85,9 +87,11 @@ func Parse(input string) (*url.URL, error) {
 
 // Used in the parser
 type uri struct {
-	Port   string
-	Scheme string
-	Host   string
-	Path   string
-	Raw    string
+	Port     string
+	Scheme   string
+	Host     string
+	Path     string
+	RawQuery string
+	Fragment string
+	Raw      string
 }

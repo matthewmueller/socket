@@ -2,8 +2,10 @@ package socket
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -20,6 +22,9 @@ func Dial(ctx context.Context, address string) (net.Conn, error) {
 	// Empty host means the path is a unix domain socket
 	if url.Host == "" {
 		return dialer.DialContext(ctx, "unix", address)
+	}
+	if hasPortRange(url.Host) {
+		return nil, fmt.Errorf("socket: %q port range is not supported by Dial", url.Host)
 	}
 	return dialer.DialContext(ctx, "tcp", url.Host)
 }
@@ -39,7 +44,19 @@ func Transport(path string) (*http.Transport, error) {
 			},
 		}, nil
 	}
+	if hasPortRange(url.Host) {
+		return nil, fmt.Errorf("socket: %q port range is not supported by Transport", url.Host)
+	}
 	return httpTransport(url.Host), nil
+}
+
+// hasPortRange checks if the hostPort contains a port range (e.g. ":3xxx")
+func hasPortRange(hostPort string) bool {
+	index := strings.LastIndex(hostPort, ":")
+	if index == -1 {
+		return false
+	}
+	return strings.Contains(hostPort[index+1:], "x")
 }
 
 // httpTransport is a modified from http.DefaultTransport
