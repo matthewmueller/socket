@@ -28,8 +28,16 @@ func TestParseColon5000(t *testing.T) {
 	equal(t, ":5000", "http://127.0.0.1:5000")
 }
 
+func TestParseColon5000Path(t *testing.T) {
+	equal(t, ":5000/some/path", "http://127.0.0.1:5000/some/path")
+}
+
 func TestParse0(t *testing.T) {
 	equal(t, "0", "http://127.0.0.1:0")
+}
+
+func TestParse0Path(t *testing.T) {
+	equal(t, "0/some/path", "http://127.0.0.1:0/some/path")
 }
 
 func TestParse0000(t *testing.T) {
@@ -70,6 +78,30 @@ func TestParseHttps(t *testing.T) {
 
 func TestParseHttpsLocalhost8000(t *testing.T) {
 	equal(t, "https://localhost:8000/a/b/c", "https://localhost:8000/a/b/c")
+}
+
+func TestParseColon3xxx(t *testing.T) {
+	equal(t, ":3xxx", "http://127.0.0.1:3xxx")
+}
+
+func TestParseColon3xxxPath(t *testing.T) {
+	equal(t, ":3xxx/some/path", "http://127.0.0.1:3xxx/some/path")
+}
+
+func TestParse3xxx(t *testing.T) {
+	equal(t, "3xxx", "http://127.0.0.1:3xxx")
+}
+
+func TestParse3xxxPath(t *testing.T) {
+	equal(t, "3xxx/some/path", "http://127.0.0.1:3xxx/some/path")
+}
+
+func TestParseHttpLocalhost30xx(t *testing.T) {
+	equal(t, "http://localhost:30xx", "http://localhost:30xx")
+}
+
+func TestParseHttpLocalhost30xxPath(t *testing.T) {
+	equal(t, "http://localhost:30xx/some/path", "http://localhost:30xx/some/path")
 }
 
 func TestParse80Ab(t *testing.T) {

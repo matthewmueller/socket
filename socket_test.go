@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -20,7 +21,16 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func TestLoadTCP(t *testing.T) {
+func TestListenTcp(t *testing.T) {
+	is := is.New(t)
+	ln, err := socket.Listen(":7441")
+	is.NoErr(err)
+	defer ln.Close()
+	is.Equal(ln.Addr().Network(), "tcp")
+	is.Equal(ln.Addr().String(), "127.0.0.1:7441")
+}
+
+func TestListenRandom(t *testing.T) {
 	is := is.New(t)
 	listener, err := socket.Listen(":0")
 	is.NoErr(err)
@@ -44,7 +54,7 @@ func TestLoadTCP(t *testing.T) {
 	server.Shutdown(context.Background())
 }
 
-func TestLoadNumberOnly(t *testing.T) {
+func TestListenRandomNumberOnly(t *testing.T) {
 	is := is.New(t)
 	listener, err := socket.Listen("0")
 	is.NoErr(err)
@@ -227,4 +237,31 @@ func TestListenEmpty(t *testing.T) {
 	ln0, err := socket.Listen("")
 	is.NoErr(err)
 	is.NoErr(ln0.Close())
+}
+
+func TestListenRange(t *testing.T) {
+	is := is.New(t)
+	for i := range 10 {
+		ln, err := socket.Listen(":800" + strconv.Itoa(i))
+		is.NoErr(err)
+		defer ln.Close()
+	}
+	ln, err := socket.Listen("80xx")
+	is.NoErr(err)
+	defer ln.Close()
+	is.Equal(ln.Addr().Network(), "tcp")
+	is.Equal(ln.Addr().String(), "127.0.0.1:8010")
+}
+
+func TestListenRangeUnavailable(t *testing.T) {
+	is := is.New(t)
+	for i := range 10 {
+		ln, err := socket.Listen(":800" + strconv.Itoa(i))
+		is.NoErr(err)
+		defer ln.Close()
+	}
+	ln, err := socket.Listen("800x")
+	is.True(err != nil)
+	is.True(strings.Contains(err.Error(), "no available ports in range 8000-8009"))
+	is.Equal(ln, nil)
 }

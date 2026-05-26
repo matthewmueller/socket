@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 //go:generate go tool peg -strict -switch -inline parse.peg
@@ -27,7 +28,7 @@ func Parse(input string) (*url.URL, error) {
 	parser.Execute()
 
 	// Fallback to regular url parsing
-	if parser.url.uri != "" {
+	if parser.url.Raw != "" && !strings.Contains(parser.url.Port, "x") {
 		u, err := url.Parse(input)
 		if err != nil {
 			return nil, err
@@ -39,20 +40,20 @@ func Parse(input string) (*url.URL, error) {
 	u := new(url.URL)
 
 	// Handle the scheme
-	if parser.url.scheme != "" {
-		u.Scheme = parser.url.scheme
-	} else if parser.url.port == "443" {
+	if parser.url.Scheme != "" {
+		u.Scheme = parser.url.Scheme
+	} else if parser.url.Port == "443" {
 		u.Scheme = "https"
 	} else {
 		u.Scheme = "http"
 	}
 
-	hasHost := parser.url.host != ""
-	hasPort := parser.url.port != ""
-	hasPath := parser.url.path != ""
+	hasHost := parser.url.Host != ""
+	hasPort := parser.url.Port != ""
+	hasPath := parser.url.Path != ""
 
 	// Handle the path if there is one
-	u.Path = parser.url.path
+	u.Path = parser.url.Path
 
 	// Handle the port
 	port := defaultPort
@@ -61,7 +62,7 @@ func Parse(input string) (*url.URL, error) {
 	}
 
 	if hasHost && u.Scheme == "fd" {
-		u.Host = parser.url.host
+		u.Host = parser.url.Host
 	}
 
 	if u.Scheme == "unix" || u.Scheme == "fd" {
@@ -70,11 +71,11 @@ func Parse(input string) (*url.URL, error) {
 
 	// Handle the host and port
 	if hasHost && hasPort {
-		u.Host = parser.url.host + ":" + parser.url.port
+		u.Host = parser.url.Host + ":" + parser.url.Port
 	} else if hasPort {
-		u.Host = defaultHost + ":" + parser.url.port // default to 127.0.0.1
+		u.Host = defaultHost + ":" + parser.url.Port // default to 127.0.0.1
 	} else if hasHost {
-		u.Host = parser.url.host + ":" + port
+		u.Host = parser.url.Host + ":" + port
 	} else if !hasPath { // Only append default host:port if there's no path
 		u.Host = defaultHost + ":" + port
 	}
@@ -84,9 +85,9 @@ func Parse(input string) (*url.URL, error) {
 
 // Used in the parser
 type uri struct {
-	port   string
-	scheme string
-	host   string
-	path   string
-	uri    string
+	Port   string
+	Scheme string
+	Host   string
+	Path   string
+	Raw    string
 }

@@ -11,19 +11,19 @@ URL <- URI
     / OnlyPort
     End
 
-URI <- < Scheme '//' Host Path? > {
-  p.url.uri = text
+URI <- < Scheme '//' Host AbsPath? > {
+  p.url.Raw = text
 }
 
 Scheme <- FdScheme / AnySchema
 
 FdScheme <- < 'fd:' [0-9]+ > {
-  p.url.scheme = "fd"
-  p.url.host = text[3:]
+  p.url.Scheme = "fd"
+  p.url.Host = text[3:]
 }
 
 AnySchema <- < [a-zA-Z][a-zA-Z+0-9]* ':' > {
-  p.url.scheme = text[:len(text)-1]
+  p.url.Scheme = text[:len(text)-1]
 }
 
 Host <- IPPort / HostNamePort / IPV4 / HostName / BracketsPort / Brackets / Path
@@ -35,35 +35,38 @@ BracketsPort <- Brackets ':' Port
 IP <- IPV4
 
 IPV4 <- < [0-9]+ '.' [0-9]+ '.' [0-9]+ '.' [0-9]+ > {
-  p.url.host = text
+  p.url.Host = text
 }
 
 HostName <- < [a-zA-Z][a-zA-Z0-9]* > {
-  p.url.host = text
+  p.url.Host = text
 }
 
-OnlyPort <- ':' Port / Port
+OnlyPort <- ':' Port AbsPath? / Port AbsPath?
 
-Port <- < '0' / [1-9] [0-9]* > {
-  p.url.port = text
+Port <- < PortRange / NumericPort > {
+  p.url.Port = text
 }
+
+PortRange <- [1-9] [0-9]* 'x'+
+NumericPort <- '0' / [1-9] [0-9]*
 
 OnlyPath <- Path {
-  p.url.scheme = "unix"
+  p.url.Scheme = "unix"
 }
 
 Path <- RelPath / AbsPath
 
 RelPath <- < '.' '/' .* > {
-  p.url.path = text
+  p.url.Path = text
 }
 
 AbsPath <- < '/' .* > {
-  p.url.path = text
+  p.url.Path = text
 }
 
 Brackets <- '[::]' {
-  p.url.host = "[::]"
+  p.url.Host = "[::]"
 }
 
 End

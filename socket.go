@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 )
 
 // Listen creates a new listener based on the addr
@@ -41,20 +44,54 @@ func Listen(addr string) (net.Listener, error) {
 		return ln, nil
 
 	case "fd":
+		// Listen on a file descriptor
 		return listenFd(url)
 
-		// Otherwise, bind to a TCP port
 	default:
-		addr, err := net.ResolveTCPAddr("tcp", url.Host)
+		// Otherwise, bind to a TCP port
+		return listenTcp(url)
+	}
+}
+
+// listenTcp listens on a TCP port
+func listenTcp(url *url.URL) (net.Listener, error) {
+	host, port, err := net.SplitHostPort(url.Host)
+	if err != nil {
+		return nil, fmt.Errorf("socket: invalid address %q", url.Host)
+	}
+	start, end, err := portRange(port)
+	if err != nil {
+		return nil, err
+	}
+	for port := start; port <= end; port++ {
+		addr, err := net.ResolveTCPAddr("tcp", host+":"+strconv.Itoa(port))
 		if err != nil {
 			return nil, err
 		}
 		ln, err := net.ListenTCP("tcp", addr)
 		if err != nil {
-			return nil, err
+			if !errors.Is(err, net.ErrClosed) && !strings.Contains(err.Error(), "address already in use") {
+				return nil, err
+			}
+			continue
 		}
 		return ln, nil
 	}
+	return nil, fmt.Errorf("socket: no available ports in range %d-%d", start, end)
+}
+
+func portRange(port string) (start int, end int, err error) {
+	s := strings.ReplaceAll(port, "x", "0")
+	e := strings.ReplaceAll(port, "x", "9")
+	start, err = strconv.Atoi(s)
+	if err != nil {
+		return 0, 0, err
+	}
+	end, err = strconv.Atoi(e)
+	if err != nil {
+		return 0, 0, err
+	}
+	return start, end, nil
 }
 
 // Serve the handler at address. // When the context is canceled, the server
